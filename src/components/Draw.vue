@@ -5,6 +5,7 @@ import { onMounted, ref } from 'vue'
 
 const tempTrace = ref<DOMPoint[]>([])
 const traces = ref<any[]>([])
+const content = ref('')
 
 onMounted(() => {
   const drauu = createDrauu({
@@ -23,7 +24,6 @@ onMounted(() => {
       const traceX = tempTrace.value.map(point => point.x)
       const traceY = tempTrace.value.map(point => point.y)
       traces.value.push([traceX, traceY, []])
-      console.log(traces.value)
     }
     tempTrace.value = []
   })
@@ -31,23 +31,25 @@ onMounted(() => {
 const svgEl = ref<SVGAElement>()
 async function clickHandler() {
   const data = JSON.stringify({ options: 'enable_pre_space', requests: [{ writing_guide: { writing_area_width: svgEl.value?.clientWidth, writing_area_height: svgEl.value?.clientHeight }, ink: traces.value, language: 'zh_TW' }] })
-
-  fetch('https://www.google.com.tw/inputtools/request?ime=handwriting&app=mobilesearch&cs=1&oe=UTF-8', {
+  const res: any[] = await fetch('https://www.google.com.tw/inputtools/request?ime=handwriting&app=mobilesearch&cs=1&oe=UTF-8', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: data,
-  }).then((res) => {
-    console.log(res)
-  })
+  }).then(res => res.json())
+  console.log(res.flat(Infinity))
+  content.value = res.flat(6)[2]
 }
 </script>
 
 <template>
-  <button style="position: fixed; top: 20px; right: 20px;" @click="clickHandler">
-    识别
-  </button>
+  <div style="position: fixed; top: 20px; right: 20px;">
+    <button @click="clickHandler">
+      识别
+    </button>
+    <span style="margin-left: 16px;">结果： {{ content }}</span>
+  </div>
   <svg
     id="svg" ref="svgEl" style="width: 100vw; height: 100vh"
   />
